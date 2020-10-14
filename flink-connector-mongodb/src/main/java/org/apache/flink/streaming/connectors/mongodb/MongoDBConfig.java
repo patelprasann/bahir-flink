@@ -17,6 +17,8 @@
 
 package org.apache.flink.streaming.connectors.mongodb;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoCredential;
 import org.apache.flink.util.Preconditions;
 import org.bson.conversions.Bson;
 import software.amazon.awssdk.regions.Region;
@@ -36,6 +38,9 @@ public class MongoDBConfig implements Serializable {
     private final int connectionTimeout;
     private final int requestTimeout;
     private final int maxErrorRetryLimit;
+    private final String applicationName;
+    private final ConnectionString connectionString;
+    private final MongoCredential credential;
     private final Region region;
     private final String databaseName;
     private final String collectionName;
@@ -49,6 +54,9 @@ public class MongoDBConfig implements Serializable {
         Preconditions.checkNotNull(builder.getConnectionTimeout(), "Connection timeout cannot be null");
         Preconditions.checkNotNull(builder.getRequestTimeout(), "Request timeout cannot be null");
         Preconditions.checkNotNull(builder.getMaxErrorRetryLimit(), "Max error retry limit cannot be null");
+        Preconditions.checkNotNull(builder.getApplicationName(), "Application name cannot be null");
+        Preconditions.checkNotNull(builder.getConnectionString(), "Connection string cannot be null");
+        Preconditions.checkNotNull(builder.getCredential(), "Credential cannot be null");
         Preconditions.checkNotNull(builder.getRegion(), "Region cannot be null");
         Preconditions.checkNotNull(builder.getDatabaseName(), "Database name cannot be null");
         Preconditions.checkNotNull(builder.getCollectionName(), "Collection name cannot be null");
@@ -60,6 +68,9 @@ public class MongoDBConfig implements Serializable {
         this.connectionTimeout = builder.getConnectionTimeout();
         this.requestTimeout = builder.getRequestTimeout();
         this.maxErrorRetryLimit = builder.getMaxErrorRetryLimit();
+        this.applicationName = builder.getApplicationName();
+        this.connectionString = builder.getConnectionString();
+        this.credential = builder.getCredential();
         this.region = builder.getRegion();
         this.databaseName = builder.getDatabaseName();
         this.collectionName = builder.getCollectionName();
@@ -82,6 +93,18 @@ public class MongoDBConfig implements Serializable {
 
     public int getMaxErrorRetryLimit() {
         return maxErrorRetryLimit;
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public ConnectionString getConnectionString() {
+        return connectionString;
+    }
+
+    public MongoCredential getCredential() {
+        return credential;
     }
 
     public Region getRegion() {
@@ -117,6 +140,9 @@ public class MongoDBConfig implements Serializable {
         private int requestTimeout = DEFAULT_REQUEST_TIMEOUT;
         private int maxErrorRetryLimit = DEFAULT_MAX_ERROR_RETRY;
         private Region region = DEFAULT_REGION;
+        private ConnectionString connectionString;
+        private MongoCredential credential;
+        private String applicationName;
         private String databaseName;
         private String collectionName;
         private Bson filter;
@@ -131,6 +157,9 @@ public class MongoDBConfig implements Serializable {
                        int connectionTimeout,
                        int requestTimeout,
                        int maxErrorRetryLimit,
+                       String applicationName,
+                       ConnectionString connectionString,
+                       MongoCredential credential,
                        String databaseName,
                        String collectionName,
                        Bson filter,
@@ -141,6 +170,9 @@ public class MongoDBConfig implements Serializable {
             this.connectionTimeout = connectionTimeout;
             this.requestTimeout = requestTimeout;
             this.maxErrorRetryLimit = maxErrorRetryLimit;
+            this.applicationName = applicationName;
+            this.connectionString = connectionString;
+            this.credential = credential;
             this.databaseName = databaseName;
             this.collectionName = collectionName;
             this.filter = filter;
@@ -170,6 +202,21 @@ public class MongoDBConfig implements Serializable {
 
         public MongoDBConfig.Builder region(Region region) {
             this.region = region;
+            return this;
+        }
+
+        public MongoDBConfig.Builder applicationName(String applicationName) {
+            this.applicationName = applicationName;
+            return this;
+        }
+
+        public MongoDBConfig.Builder connectionString(ConnectionString connectionString) {
+            this.connectionString = connectionString;
+            return this;
+        }
+
+        public MongoDBConfig.Builder credential(MongoCredential credential) {
+            this.credential = credential;
             return this;
         }
 
@@ -216,6 +263,18 @@ public class MongoDBConfig implements Serializable {
 
         public int getMaxErrorRetryLimit() {
             return this.maxErrorRetryLimit;
+        }
+
+        public String getApplicationName() {
+            return this.applicationName;
+        }
+
+        public ConnectionString getConnectionString() {
+            return this.connectionString;
+        }
+
+        public MongoCredential getCredential() {
+            return this.credential;
         }
 
         public String getDatabaseName() {

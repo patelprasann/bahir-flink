@@ -17,6 +17,8 @@
 package org.apache.flink.streaming.connectors.mongodb;
 
 import com.mongodb.MongoClientSettings;
+import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -60,6 +62,11 @@ public class MongoDBSource<OUT>
                 fromProviders(PojoCodecProvider.builder().automatic(true).build()));
         MongoClientSettings settings = MongoClientSettings
                 .builder()
+                .applicationName(mongoDBConfig.getApplicationName())
+                .applyConnectionString(mongoDBConfig.getConnectionString())
+                .credential(mongoDBConfig.getCredential())
+                .readConcern(ReadConcern.AVAILABLE)
+                .readPreference(ReadPreference.secondaryPreferred())
                 .codecRegistry(pojoCodecRegistry)
                 .build();
         mongoClient = MongoClients.create(settings);
