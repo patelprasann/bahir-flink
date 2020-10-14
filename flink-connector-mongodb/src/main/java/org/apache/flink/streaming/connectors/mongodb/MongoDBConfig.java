@@ -15,55 +15,65 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.connectors.timestreamdb;
+package org.apache.flink.streaming.connectors.mongodb;
 
 import org.apache.flink.util.Preconditions;
+import org.bson.conversions.Bson;
 import software.amazon.awssdk.regions.Region;
 
 import java.io.Serializable;
 
-public class TimestreamDBConfig implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class MongoDBConfig implements Serializable {
+    private static final long serialVersionUID = -8689291992192955579L;
 
-    private static final long DEFAULT_RECORD_FLUSH_INTERVAL = 60_000L;
-    private static final int DEFAULT_BATCH_SIZE = 10_000;
     private static final int DEFAULT_MAX_CONNECTIONS = 5_000;
+    private static final int DEFAULT_CONNECTION_TIMEOUT = 20_000;
     private static final int DEFAULT_REQUEST_TIMEOUT = 20_000;
     private static final int DEFAULT_MAX_ERROR_RETRY = 10;
     private static final Region DEFAULT_REGION = Region.US_EAST_1;
 
     private final int maxConnections;
+    private final int connectionTimeout;
     private final int requestTimeout;
     private final int maxErrorRetryLimit;
-    private final int batchSize;
-    private final long recordFlushInterval;
     private final Region region;
     private final String databaseName;
-    private final String tableName;
+    private final String collectionName;
+    private final Bson filter;
+    private final Bson projection;
+    private final Bson sort;
 
-    public TimestreamDBConfig(TimestreamDBConfig.Builder builder) {
-        Preconditions.checkArgument(builder != null, "TimestreamDBConfig builder can not be null");
+    public MongoDBConfig(MongoDBConfig.Builder builder) {
+        Preconditions.checkArgument(builder != null, "MongoDBConfig builder can not be null");
         Preconditions.checkNotNull(builder.getMaxConnections(), "Max connections cannot be null");
+        Preconditions.checkNotNull(builder.getConnectionTimeout(), "Connection timeout cannot be null");
         Preconditions.checkNotNull(builder.getRequestTimeout(), "Request timeout cannot be null");
         Preconditions.checkNotNull(builder.getMaxErrorRetryLimit(), "Max error retry limit cannot be null");
-        Preconditions.checkNotNull(builder.getBatchSize(), "Batch size cannot be null");
-        Preconditions.checkNotNull(builder.getRecordFlushInterval(), "Record flush interval cannot be null");
         Preconditions.checkNotNull(builder.getRegion(), "Region cannot be null");
         Preconditions.checkNotNull(builder.getDatabaseName(), "Database name cannot be null");
-        Preconditions.checkNotNull(builder.getTableName(), "Table name cannot be null");
+        Preconditions.checkNotNull(builder.getCollectionName(), "Collection name cannot be null");
+        Preconditions.checkNotNull(builder.getFilter(), "Filters cannot be null");
+        Preconditions.checkNotNull(builder.getProjection(), "Projections cannot be null");
+        Preconditions.checkNotNull(builder.getSort(), "Sort cannot be null");
 
         this.maxConnections = builder.getMaxConnections();
+        this.connectionTimeout = builder.getConnectionTimeout();
         this.requestTimeout = builder.getRequestTimeout();
         this.maxErrorRetryLimit = builder.getMaxErrorRetryLimit();
-        this.batchSize = builder.getBatchSize();
-        this.recordFlushInterval = builder.getRecordFlushInterval();
         this.region = builder.getRegion();
         this.databaseName = builder.getDatabaseName();
-        this.tableName = builder.getTableName();
+        this.collectionName = builder.getCollectionName();
+        this.filter = builder.getFilter();
+        this.projection = builder.getProjection();
+        this.sort = builder.getSort();
     }
 
     public int getMaxConnections() {
         return maxConnections;
+    }
+
+    public int getConnectionTimeout() {
+        return connectionTimeout;
     }
 
     public int getRequestTimeout() {
@@ -74,14 +84,6 @@ public class TimestreamDBConfig implements Serializable {
         return maxErrorRetryLimit;
     }
 
-    public int getBatchSize() {
-        return batchSize;
-    }
-
-    public long getRecordFlushInterval() {
-        return recordFlushInterval;
-    }
-
     public Region getRegion() {
         return region;
     }
@@ -90,91 +92,122 @@ public class TimestreamDBConfig implements Serializable {
         return databaseName;
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public Bson getFilter() {
+        return filter;
+    }
+
+    public Bson getProjection() {
+        return projection;
+    }
+
+    public Bson getSort() {
+        return sort;
     }
 
     /**
-     * A builder used to create an instance of a TimestreamDBConfig.
+     * A builder used to create an instance of a MongoDBConfig.
      */
     public static class Builder {
         private int maxConnections = DEFAULT_MAX_CONNECTIONS;
+        private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
         private int requestTimeout = DEFAULT_REQUEST_TIMEOUT;
         private int maxErrorRetryLimit = DEFAULT_MAX_ERROR_RETRY;
-        private int batchSize = DEFAULT_BATCH_SIZE;
-        private long recordFlushInterval = DEFAULT_RECORD_FLUSH_INTERVAL;
         private Region region = DEFAULT_REGION;
         private String databaseName;
-        private String tableName;
+        private String collectionName;
+        private Bson filter;
+        private Bson projection;
+        private Bson sort;
 
         public Builder() {
         }
 
         public Builder(Region region,
                        int maxConnections,
+                       int connectionTimeout,
                        int requestTimeout,
                        int maxErrorRetryLimit,
-                       int batchSize,
-                       long recordFlushInterval,
                        String databaseName,
-                       String tableName) {
+                       String collectionName,
+                       Bson filter,
+                       Bson projection,
+                       Bson sort) {
             this.region = region;
             this.maxConnections = maxConnections;
+            this.connectionTimeout = connectionTimeout;
             this.requestTimeout = requestTimeout;
             this.maxErrorRetryLimit = maxErrorRetryLimit;
-            this.batchSize = batchSize;
-            this.recordFlushInterval = recordFlushInterval;
             this.databaseName = databaseName;
-            this.tableName = tableName;
+            this.collectionName = collectionName;
+            this.filter = filter;
+            this.projection = projection;
+            this.sort = sort;
         }
 
-        public TimestreamDBConfig.Builder maxConnections(int maxConnections) {
+        public MongoDBConfig.Builder maxConnections(int maxConnections) {
             this.maxConnections = maxConnections;
             return this;
         }
 
-        public TimestreamDBConfig.Builder requestTimeout(int requestTimeout) {
+        public MongoDBConfig.Builder connectionTimeout(int connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+            return this;
+        }
+
+        public MongoDBConfig.Builder requestTimeout(int requestTimeout) {
             this.requestTimeout = requestTimeout;
             return this;
         }
 
-        public TimestreamDBConfig.Builder maxErrorRetryLimit(int maxErrorRetryLimit) {
+        public MongoDBConfig.Builder maxErrorRetryLimit(int maxErrorRetryLimit) {
             this.maxErrorRetryLimit = maxErrorRetryLimit;
             return this;
         }
 
-        public TimestreamDBConfig.Builder region(Region region) {
+        public MongoDBConfig.Builder region(Region region) {
             this.region = region;
             return this;
         }
 
-        public TimestreamDBConfig.Builder batchSize(int batchSize) {
-            this.batchSize = batchSize;
-            return this;
-        }
-
-        public TimestreamDBConfig.Builder recordFlushInterval(Long recordFlushInterval) {
-            this.recordFlushInterval = recordFlushInterval;
-            return this;
-        }
-
-
-        public TimestreamDBConfig.Builder databaseName(String databaseName) {
+        public MongoDBConfig.Builder databaseName(String databaseName) {
             this.databaseName = databaseName;
             return this;
         }
 
-        public TimestreamDBConfig.Builder tableName(String tableName) {
-            this.tableName = tableName;
+        public MongoDBConfig.Builder collectionName(String collectionName) {
+            this.collectionName = collectionName;
             return this;
         }
 
-        public TimestreamDBConfig build() {
-            return new TimestreamDBConfig(this);
+        public MongoDBConfig.Builder filter(Bson filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        public MongoDBConfig.Builder projection(Bson projection) {
+            this.projection = projection;
+            return this;
+        }
+
+        public MongoDBConfig.Builder sort(Bson sort) {
+            this.sort = sort;
+            return this;
+        }
+
+        public MongoDBConfig build() {
+            return new MongoDBConfig(this);
         }
 
         public int getMaxConnections() {
             return this.maxConnections;
+        }
+
+        public int getConnectionTimeout() {
+            return this.connectionTimeout;
         }
 
         public int getRequestTimeout() {
@@ -185,20 +218,24 @@ public class TimestreamDBConfig implements Serializable {
             return this.maxErrorRetryLimit;
         }
 
-        public int getBatchSize() {
-            return this.batchSize;
-        }
-
-        public long getRecordFlushInterval() {
-            return this.recordFlushInterval;
-        }
-
         public String getDatabaseName() {
             return this.databaseName;
         }
 
-        public String getTableName() {
-            return this.tableName;
+        public String getCollectionName() {
+            return this.collectionName;
+        }
+
+        public Bson getFilter() {
+            return this.filter;
+        }
+
+        public Bson getProjection() {
+            return this.projection;
+        }
+
+        public Bson getSort() {
+            return this.sort;
         }
 
         public Region getRegion() {
